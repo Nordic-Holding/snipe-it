@@ -1,4 +1,7 @@
 # Compose file for production.
+#
+# Coolify (and similar) often inject an .env with empty DB_* / MYSQL_ROOT_PASSWORD.
+# MariaDB refuses to start without credentials; ${VAR:-default} treats empty as unset.
 
 volumes:
   db_data:
@@ -18,6 +21,13 @@ services:
         restart: true
     env_file:
       - .env
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-snipeit}
+      DB_USERNAME: ${DB_USERNAME:-snipeit}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme1234}
 
   db:
     image: mariadb:11.4.7
@@ -25,10 +35,10 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE:-snipeit}
+      MYSQL_USER: ${DB_USERNAME:-snipeit}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme1234}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme1234}
     healthcheck:
       # https://mariadb.com/kb/en/using-healthcheck-sh/#compose-file-example
       # First boot can take a while (InnoDB init); without start_period, app never
