@@ -1,7 +1,8 @@
 # Compose file for production.
 #
-# Coolify (and similar) often inject an .env with empty DB_* / MYSQL_ROOT_PASSWORD.
-# MariaDB refuses to start without credentials; ${VAR:-default} treats empty as unset.
+# Coolify (and similar) often inject an .env with empty DB_* / MYSQL_ROOT_PASSWORD,
+# APP_KEY, or APP_URL. The Snipe-IT entrypoint exits without APP_KEY (no web server).
+# ${VAR:-default} treats empty values as unset. Override secrets in Coolify for production.
 
 volumes:
   db_data:
@@ -22,6 +23,10 @@ services:
     env_file:
       - .env
     environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_KEY: ${APP_KEY:-base64:ahL788gGm533xulsj7zVVFokQovYh2x06S2l26HSatw=}
+      APP_URL: ${APP_URL:-${SERVICE_URL_APP:-http://localhost:8000}}
       DB_CONNECTION: ${DB_CONNECTION:-mysql}
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-3306}
