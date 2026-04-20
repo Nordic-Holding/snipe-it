@@ -1,10 +1,3 @@
-# Compose file for production.
-#
-# Coolify (and similar) often inject an .env with empty DB_* / MYSQL_ROOT_PASSWORD,
-# APP_KEY, or APP_URL. The Snipe-IT entrypoint exits without APP_KEY (no web server).
-# ${VAR:-default} treats empty values as unset. Override secrets in Coolify for production.
-# Do not nest ${VAR:-${OTHER:-x}} in values: Coolify's build-time.env parser breaks on it.
-
 volumes:
   db_data:
   storage:
@@ -20,21 +13,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
-        restart: true
     env_file:
       - .env
     environment:
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_KEY: ${APP_KEY:-base64:ahL788gGm533xulsj7zVVFokQovYh2x06S2l26HSatw=}
-      # Coolify sets SERVICE_URL_APP; single-level default only (nested ${} breaks Coolify build-time.env).
-      APP_URL: ${SERVICE_URL_APP:-http://localhost:8000}
-      DB_CONNECTION: ${DB_CONNECTION:-mysql}
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_DATABASE: ${DB_DATABASE:-snipeit}
-      DB_USERNAME: ${DB_USERNAME:-snipeit}
-      DB_PASSWORD: ${DB_PASSWORD:-changeme1234}
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${SERVICE_URL_APP}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
 
   db:
     image: mariadb:11.4.7
@@ -42,14 +33,11 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-snipeit}
-      MYSQL_USER: ${DB_USERNAME:-snipeit}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme1234}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme1234}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     healthcheck:
-      # https://mariadb.com/kb/en/using-healthcheck-sh/#compose-file-example
-      # First boot can take a while (InnoDB init); without start_period, app never
-      # starts on slower disks / Coolify hosts because db is marked unhealthy first.
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
