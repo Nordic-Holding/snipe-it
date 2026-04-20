@@ -31,7 +31,10 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     healthcheck:
       # https://mariadb.com/kb/en/using-healthcheck-sh/#compose-file-example
+      # First boot can take a while (InnoDB init); without start_period, app never
+      # starts on slower disks / Coolify hosts because db is marked unhealthy first.
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
-      timeout: 1s
-      retries: 5
+      timeout: 5s
+      retries: 12
+      start_period: 60s
